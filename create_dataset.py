@@ -28,11 +28,13 @@ RANGES = [
     (10, 91),   # Questions
     (92, 478)   # Solutions
 ]
+QUESTIONS = RANGES[0]
+SOLUTIONS = RANGES[1]
 
 
 MAX_CONCURRENT_REQUESTS = 100
 MAX_RETRIES = 3 
-MODEL_NAME = "gemini-3-flash-preview" # "gemini-3-pro-preview" "gemini-3-flash-preview"
+MODEL_NAME = "gemini-3-pro-preview" # "gemini-3-pro-preview" "gemini-3-flash-preview"
 
 # Improved Prompt to reduce JSON errors
 SYSTEM_PROMPT = """
@@ -138,6 +140,41 @@ def merge_dataset(raw_data: List[Dict]) -> List[Dict]:
     # 1. Sort by page number
     sorted_pages = sorted(raw_data, key=lambda x: x["_source_page"])
     merged_output = []
+
+    q_data = {}
+    a_data = {}
+    q_exercise = a_exercise = ""
+    last = None
+
+    for page in sorted_pages:
+        if QUESTIONS[0]<=page["_source_page"]<=QUESTIONS[1]:
+            if "exercise" in page:
+                q_exercise = str(page["exercise"])
+            if q_exercise=="":
+                print(f"⚠️ P{page['_source_page']} has no exercise key or empty exercise. Skipping.")
+                return {}
+            for key in page:
+                if key not in ["exercise", "_source_page", "prev_page"]:
+                    q_data[q_exercise+"_"+key] = page[key]
+                    last = q_exercise+"_"+key
+                elif key == "prev_page" and last is not None:
+                    q_data[last] += " " + page[key]
+        elif SOLUTIONS[0]<=page["_source_page"]<=SOLUTIONS[1]:
+            if "exercise" in page:
+                a_exercise = str(page["exercise"])
+            if a_exercise=="":
+                print(f"⚠️ P{page['_source_page']} has no exercise key or empty exercise. Skipping.")
+                return {}
+            for key in page:
+                if key not in ["exercise", "_source_page", "prev_page"]:
+                    a_data[a_exercise+"_"+key] = page[key]
+                    last = a_exercise+"_"+key
+                elif key == "prev_page" and last is not None:
+                    a_data[last] += " " + page[key]
+    data = [{'id': k, 'question': q_data[k], 'answer': a_data.get(k, "")} for k in q_data.keys() if k in a_data.keys()]
+    return data
+                
+        
 
     for i, current_page in enumerate(sorted_pages):
         page_content = current_page.copy()
