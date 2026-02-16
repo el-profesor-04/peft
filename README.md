@@ -14,4 +14,24 @@ pip install google-genai pdf2image pillow requests trl peft accelerate bitsandby
 pip install python-dotenv
 
 pip install google-api-core
+
+pip install packaging ninja
+
+pip install wandb
+
+pip install --upgrade transformers trl peft accelerate
+
+pip install wheel setuptools packaging ninja
+
+MAX_JOBS=4 pip install flash-attn --no-build-isolation
+
+pip install --upgrade torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+
+pip install "trl[vllm]"
+
+pip uninstall -y flash-attn
+
+MAX_JOBS=4 FLASH_ATTENTION_FORCE_BUILD=TRUE pip install flash-attn --no-build-isolation
+
+
 ```

@@ -175,35 +175,6 @@ def merge_dataset(raw_data: List[Dict]) -> List[Dict]:
     return data
                 
         
-
-    for i, current_page in enumerate(sorted_pages):
-        page_content = current_page.copy()
-        
-        # Handle 'prev_page' content
-        if "prev_page" in page_content:
-            text_to_append = page_content.pop("prev_page") 
-            
-            if i > 0:
-                prev_page_obj = sorted_pages[i-1]
-                
-                # Check continuity (Page 12 follows Page 11)
-                if prev_page_obj["_source_page"] == current_page["_source_page"] - 1:
-                    valid_keys = [k for k in prev_page_obj.keys() if k not in ["exercise", "_source_page", "prev_page"]]
-                    
-                    if valid_keys:
-                        # Assuming insertion order roughly matches numeric order
-                        last_key = list(valid_keys)[-1] 
-                        print(f"   🔗 Linking P{current_page['_source_page']} start -> P{prev_page_obj['_source_page']} key '{last_key}'")
-                        prev_page_obj[last_key] += " " + text_to_append
-                    else:
-                        print(f"   ⚠️ P{current_page['_source_page']} has cont. text, but P{prev_page_obj['_source_page']} has no keys.")
-                else:
-                    print(f"   ⚠️ Gap detected! P{prev_page_obj['_source_page']} -> P{current_page['_source_page']}. Cannot merge text.")
-        
-        merged_output.append(page_content)
-
-    return merged_output
-
 async def main():
     if not os.path.exists(PDF_PATH):
         print("❌ PDF not found")
