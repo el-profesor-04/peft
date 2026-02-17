@@ -109,14 +109,6 @@ def combined_reward_fn(completions, ground_truth, answer_type, **kwargs):
         total_rewards.append(score)
     return total_rewards
 
-# --- GRPO CONFIG & TRAINING ---
-
-SFT_ADAPTER_PATH = "./adapters/sft-r64-final"
-RANK = 64
-BASE_MODEL_ID = "deepseek-ai/deepseek-math-7b-base"
-
-
-dataset = load_dataset("json", data_files="data/cot/train_tagged.jsonl")
 
 def format_grpo_prompt(example):
     return {
@@ -125,39 +117,46 @@ def format_grpo_prompt(example):
         "answer_type": example['answer_type']
     }
 
-grpo_dataset = dataset['train'].filter(lambda x: x['answer_type'] != 'proof').map(format_grpo_prompt)
+if __name__ == "__main__":
 
-training_args = GRPOConfig(
-    output_dir="./grpo-combinatorics-final",
-    learning_rate=1e-6,
-    per_device_train_batch_size=1,
-    gradient_accumulation_steps=8,
-    num_generations=8, # Group size
-    max_completion_length=1024,
-    bf16=True,
-    report_to="wandb",
-    logging_steps=1,
-    # A6000 optimization:
-    use_vllm = True, # Highly recommended for GRPO generation speed
-    vllm_mode="colocate",
-    vllm_gpu_memory_utilization=0.4,
-)
+    SFT_ADAPTER_PATH = "./adapters/sft-r64-final"
+    RANK = 64
+    BASE_MODEL_ID = "deepseek-ai/deepseek-math-7b-base"
 
-base_model = AutoModelForCausalLM.from_pretrained(
-    BASE_MODEL_ID,
-    torch_dtype=torch.bfloat16,
-    device_map="auto",
-    attn_implementation="sdpa"
-)
+    dataset = load_dataset("json", data_files="data/cot/train_tagged.jsonl")
+    grpo_dataset = dataset['train'].filter(lambda x: x['answer_type'] != 'proof').map(format_grpo_prompt)
 
-model = PeftModel.from_pretrained(base_model, SFT_ADAPTER_PATH, is_trainable=True)
+    training_args = GRPOConfig(
+        output_dir="./grpo-combinatorics-final",
+        learning_rate=1e-6,
+        per_device_train_batch_size=1,
+        gradient_accumulation_steps=8,
+        num_generations=8, # Group size
+        max_completion_length=1024,
+        bf16=True,
+        report_to="wandb",
+        logging_steps=1,
+        # A6000 optimization:
+        use_vllm = True, # Highly recommended for GRPO generation speed
+        vllm_mode="colocate",
+        vllm_gpu_memory_utilization=0.4,
+    )
 
-trainer = GRPOTrainer(
-    model=model,  # Point directly to your SFT adapter folder
-    reward_funcs=[combined_reward_fn],
-    args=training_args,
-    train_dataset=grpo_dataset,
-    # IMPORTANT: We keep the same LoRA config so we are "extending" the SFT training
-)
+    base_model = AutoModelForCausalLM.from_pretrained(
+        BASE_MODEL_ID,
+        torch_dtype=torch.bfloat16,
+        device_map="auto",
+        attn_implementation="sdpa"
+    )
 
-trainer.train()
+    model = PeftModel.from_pretrained(base_model, SFT_ADAPTER_PATH, is_trainable=True)
+
+    trainer = GRPOTrainer(
+        model=model,  # Point directly to your SFT adapter folder
+        reward_funcs=[combined_reward_fn],
+        args=training_args,
+        train_dataset=grpo_dataset,
+        # IMPORTANT: We keep the same LoRA config so we are "extending" the SFT training
+    )
+
+    trainer.train()

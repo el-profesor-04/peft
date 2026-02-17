@@ -44,7 +44,7 @@ async def classify_sample(sample, semaphore):
             return sample
 
 async def main():
-    for split in ['train', 'val']:
+    for split in ['train', 'val', 'test']:
         file_path = f"data/cot/{split}.jsonl"
         with open(file_path, 'r') as f:
             data = [json.loads(line) for line in f]

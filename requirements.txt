@@ -1,0 +1,35 @@
+# --- PyTorch (CUDA 12.4) ---
+# We point to the Nvidia index to ensure we get GPU support
+--extra-index-url https://download.pytorch.org/whl/cu124
+torch==2.5.1
+torchvision==0.20.1
+torchaudio==2.5.1
+
+# --- Hugging Face Ecosystem ---
+transformers>=4.46.0
+peft>=0.13.0
+accelerate>=1.0.0
+bitsandbytes>=0.44.0
+datasets>=3.0.0
+
+# --- TRL & Generation ---
+# Installs TRL with vLLM support for fast GRPO generation
+trl[vllm]>=0.11.0
+
+# --- Experiment Tracking & Config ---
+wandb
+python-dotenv
+tyro
+rich
+packaging
+ninja
+psutil
+
+# --- Evaluation (Gemini Judge) ---
+google-genai
+google-api-core
+requests
+
+# --- Data Processing ---
+pillow
+pdf2image
