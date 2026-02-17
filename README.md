@@ -52,6 +52,13 @@ We initialized the RL phase using the **SFT (Rank 64)** adapter.
     3.  **Thinking Quality:** Penalties for empty or overly short reasoning chains.
 
 ---
+## 🔗 Models & Artifacts
+
+| Model Type | Rank | Hugging Face Link | Description |
+| :--- | :--- | :--- | :--- |
+| **SFT Adapter** | r=64 | [🔗 Link](https://huggingface.co/el-profesor/peft) | Supervised baseline; learns syntax. |
+| **GRPO Adapter** | r=64 | [🔗 Link](https://huggingface.co/el-profesor/peft) | RL-tuned; learns numeric reasoning (9.1% acc). |
+
 
 ## ⚙️ Installation
 
